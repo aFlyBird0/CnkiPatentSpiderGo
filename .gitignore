@@ -1,0 +1,4 @@
+.idea/
+db/dsn.txt
+data/
+*.db
