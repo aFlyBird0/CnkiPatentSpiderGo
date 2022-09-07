@@ -3,6 +3,8 @@ go get github.com/mitchellh/gox
 go install github.com/mitchellh/gox
 # 切换至 main.go 所在目录
 cd cmd
+# 删除旧二进制文件
+rm -rf "../知网专利爬虫/bin/"
 # 交叉编译, 同时忽略 darwin/386 平台，会报错
 gox -output "../知网专利爬虫/bin/spider_{{.OS}}_{{.Arch}}" -osarch='!darwin/386'
 
