@@ -4,9 +4,29 @@
 
 ## 使用方法
 
-在 `bin` 目录下找到适合自己操作系统和芯片架构的二进制文件，运行 `./二进制文件名 run` 即可。
+在 `bin` 目录下找到适合自己操作系统和芯片架构的二进制文件，
 
-如，MacOS 的 M1 芯片架构，运行 `./spider_darwin_arm64 run`。
+1. 给二进制文件赋予执行权限：`chmod a+x 二进制文件名`
+2. 运行： `./二进制文件名 run`
+
+如，MacOS 的 M1 芯片架构，运行：
+
+```bash
+chmod a+x spider_darwin_arm64
+./spider_darwin_arm64 run`
+```
+
+### 二进制文件选择
+
+一般来说：
+
+* Windows 选 `spider_windows_amd64.exe`
+* Linux 大多是 `spider_linux_amd64`。
+* MacO
+  * 英特尔芯片：`spider_darwin_amd64`
+  * 苹果芯片：`spider_darwin_arm64`
+
+### 运行说明
 
 把程序放到后台运行，不要关掉。当然也可以使用 `nohup` 一类的命令在后台运行。
 

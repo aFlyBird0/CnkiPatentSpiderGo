@@ -48,15 +48,15 @@ func initLog() {
 		logrus.Fatalf("创建日志目录失败: %v", err)
 	}
 
-	debugLogFile, err := os.OpenFile(spider.LogDebugFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	debugLogFile, err := os.OpenFile(spider.LogDebugFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
 	if err != nil {
 		logrus.Fatalf("打开Debug日志文件失败: %v", err)
 	}
-	infoLogFile, err := os.OpenFile(spider.LogInfoFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	infoLogFile, err := os.OpenFile(spider.LogInfoFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
 	if err != nil {
 		logrus.Fatalf("打开Info日志文件失败: %v", err)
 	}
-	errorLogFile, err := os.OpenFile(spider.LogErrorFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	errorLogFile, err := os.OpenFile(spider.LogErrorFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0777)
 	if err != nil {
 		logrus.Fatalf("打开Error日志文件失败: %v", err)
 	}
