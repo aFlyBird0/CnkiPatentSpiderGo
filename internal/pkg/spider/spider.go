@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/antchfx/htmlquery"
@@ -19,35 +20,71 @@ import (
 const patentPrefix = "https://kns.cnki.net/kcms/detail/detail.aspx?dbcode=SCPD&filename=%s"
 
 type Spider struct {
-	th           TaskHandler
-	minSleepTime time.Duration
-	maxSleepTime time.Duration
+	th                   TaskHandler
+	minSleepTime         time.Duration // 两次爬取之间的最小睡眠时间
+	maxSleepTime         time.Duration // 两次爬取之间的最大睡眠时间
+	waitForTaskSleepTime time.Duration // 等待任务时的睡眠时间
+	concurrency          int           // 并发数
 }
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func NewSpider(th TaskHandler, minSleepTime, maxSleepTime time.Duration) *Spider {
+func NewSpider(th TaskHandler, concurrency int, minSleepTime, maxSleepTime, waitForTaskSleepTime time.Duration) *Spider {
 	// 校验与修正参数
+	if concurrency < 1 {
+		logrus.Info("并发数不能小于 1，已自动设置为 1")
+		concurrency = 1
+	}
+	if concurrency > 32 {
+		logrus.Info("并发数不能大于 32，已自动设置为 32")
+		concurrency = 32
+	}
 	if minSleepTime > maxSleepTime {
 		logrus.Fatal("最小睡眠时间不能大于最大睡眠时间")
 	}
 	if minSleepTime < time.Millisecond*100 {
+		logrus.Info("最小睡眠时间不能小于 100 毫秒，已自动设置为 100 毫秒")
 		minSleepTime = time.Millisecond * 100
 	}
 	if maxSleepTime > time.Second*10 {
+		logrus.Info("最大睡眠时间不能大于 10 秒，已自动设置为 10 秒")
 		maxSleepTime = time.Second * 10
 	}
+	if waitForTaskSleepTime < time.Minute {
+		logrus.Info("等待任务时的睡眠时间不能小于1分钟，已自动设置为 1 分钟")
+		waitForTaskSleepTime = time.Minute
+	}
+	if waitForTaskSleepTime > time.Hour {
+		logrus.Info("等待任务时的睡眠时间不能大于1小时，已自动设置为 1 小时")
+		waitForTaskSleepTime = time.Hour
+	}
 	return &Spider{
-		th:           th,
-		minSleepTime: minSleepTime,
-		maxSleepTime: maxSleepTime,
+		th:                   th,
+		concurrency:          concurrency,
+		minSleepTime:         minSleepTime,
+		maxSleepTime:         maxSleepTime,
+		waitForTaskSleepTime: waitForTaskSleepTime,
 	}
 }
 
 // 目前的任务均已完成，等待新任务中
 var waitForTask bool
+
+func (s *Spider) GoRun() {
+	logrus.Infof("并发数为 %d", s.concurrency)
+	var wg sync.WaitGroup
+	for i := 0; i < s.concurrency; i++ {
+		wg.Add(1)
+		go func(i int) {
+			logrus.Infof("已启动第 %d 个爬虫", i+1)
+			s.Run()
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+}
 
 func (s *Spider) Run() {
 	continuousErrCount := 0
@@ -189,6 +226,20 @@ func (s *Spider) ParseContent(date, code, publicCode string) (patent *Patent, er
 		patent.Sovereignty = strings.TrimSpace(htmlquery.InnerText(sovereignty))
 	}
 
+	// 融合申请公开号与授权公开号
+	// 注：其实这个号就是 publicCode，但是有的是申请公开号，有的是授权公开号
+	if patent.ApplyPublicationNo != "" {
+		patent.PublicationNo = patent.ApplyPublicationNo
+	}
+	if patent.AuthPublicationNo != "" {
+		patent.PublicationNo = patent.AuthPublicationNo
+	}
+	if patent.PublicationNo != publicCode {
+		return nil, fmt.Errorf("融合申请公开号与授权公开号后，与任务中的公开号匹配失败: "+
+			"日期：%s，学科分类%s，任务中的公开号%s，申请公开号：%s ，授权公开号：%s，融合后的公开号：%s",
+			date, code, publicCode, patent.ApplyPublicationNo, patent.AuthPublicationNo, patent.PublicationNo)
+	}
+
 	return patent, nil
 }
 
@@ -215,14 +266,15 @@ func (s *Spider) SaveHtml(body, date, code, publicCode string) {
 }
 
 func (s *Spider) RandomSleep() {
-	// 如果没有任务，等待 5 分钟，切换到低频模式
+	// 如果没有任务，等待一段时间，切换到低频模式
 	if waitForTask {
-		logrus.Info("没有任务，等待 5 分钟")
-		time.Sleep(time.Second * 5)
+		logrus.Info("没有任务，等待 " + s.waitForTaskSleepTime.String())
+		time.Sleep(s.waitForTaskSleepTime)
+	} else {
+		// 随机睡眠 minSleepTime ~ maxSleepTime
+		sleepTime := time.Duration(rand.Int63n(int64(s.maxSleepTime-s.minSleepTime))) + s.minSleepTime
+		time.Sleep(sleepTime)
 	}
-	// 随机睡眠 minSleepTime ~ maxSleepTime
-	sleepTime := time.Duration(rand.Int63n(int64(s.maxSleepTime-s.minSleepTime))) + s.minSleepTime
-	time.Sleep(sleepTime)
 }
 
 func getPatentURL(publicCode string) string {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"os"
 
 	"github.com/rifflock/lfshook"
@@ -63,18 +62,18 @@ func initLog() {
 	}
 
 	// 合并 io 流，以将日志同时输出到文件和控制台
-	debugWriters := io.MultiWriter(os.Stdout, debugLogFile)
-	infoWriters := io.MultiWriter(os.Stdout, infoLogFile)
-	errorWriters := io.MultiWriter(os.Stdout, errorLogFile)
+	//debugWriters := io.MultiWriter(os.Stdout, debugLogFile)
+	//infoWriters := io.MultiWriter(os.Stdout, infoLogFile)
+	//errorWriters := io.MultiWriter(os.Stdout, errorLogFile)
 
 	// 为不同级别设置不同的输出目标
 	lfHook := lfshook.NewHook(lfshook.WriterMap{
-		logrus.DebugLevel: debugWriters,
-		logrus.InfoLevel:  infoWriters,
-		logrus.ErrorLevel: errorWriters,
-		logrus.WarnLevel:  infoWriters,
-		logrus.FatalLevel: errorWriters,
-		logrus.PanicLevel: errorWriters,
+		logrus.DebugLevel: debugLogFile,
+		logrus.InfoLevel:  infoLogFile,
+		logrus.WarnLevel:  infoLogFile,
+		logrus.ErrorLevel: errorLogFile,
+		logrus.FatalLevel: errorLogFile,
+		logrus.PanicLevel: errorLogFile,
 	}, nil)
 	logrus.AddHook(lfHook)
 }
