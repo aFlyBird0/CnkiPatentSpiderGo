@@ -43,7 +43,7 @@ func NewMysqlTaskHandler() TaskHandler {
 func (th *MysqlTaskHandler) GetTask() (taskID uint, publicCode string, date string, code string, err error) {
 	var tasks []Task
 	// 寻找未完成的且被爬取次数较小的任务
-	err = db.GetDB().Order("crawl_count asc").Find(&tasks, "finish = ?", false).Limit(200).Error
+	err = db.GetDB().Find(&tasks, "finish = ?", false).Limit(200).Error
 	if err != nil {
 		return 0, "", "", "", err
 	}
