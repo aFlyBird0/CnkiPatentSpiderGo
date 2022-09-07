@@ -66,9 +66,9 @@ func (patent *Patent) FillRowFields(key, value string) {
 		patent.MainClassificationNo = value
 	case "代理机构：":
 		patent.Agency = value
-	case "代理人":
+	case "代理人：":
 		patent.Agent = value
-	case "页数":
+	case "页数：":
 		patent.Page = value
 	}
 }

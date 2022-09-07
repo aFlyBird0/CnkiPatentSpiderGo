@@ -158,7 +158,7 @@ func (s *Spider) ParseContent(date, code, publicCode string) (patent *Patent, er
 
 	patent = &Patent{}
 	patent.NaviCode = code
-	if len(patent.Year) >= 4 {
+	if len(date) >= 4 {
 		patent.Year = date[0:4]
 	}
 	patent.Url = url
