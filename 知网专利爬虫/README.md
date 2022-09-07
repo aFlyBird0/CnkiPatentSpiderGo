@@ -28,3 +28,7 @@
 
 * 所有爬到的数据都会在存到 `MySQL` 里。
 * 同时还会在本地生成一个 `data` 文件夹，用于记录 html 原始文件还有 log。把 `data` 文件夹打包返还即可
+
+## 源代码
+
+代码已开源，地址 [CnkiPatentSpiderGo](https://github.com/aFlyBird0/CnkiPatentSpiderGo), 欢迎 Star、Fork、PR。
