@@ -11,6 +11,8 @@ import (
 	"spider/db"
 )
 
+var ErrTaskAllFinished = errors.New("所有任务已完成，等待新任务中，已切换到超低频爬取模式")
+
 type TaskHandler interface {
 	GetTask() (taskID uint, publicCode string, date string, code string, err error)
 	SavePatent(taskID uint, patent *Patent) error
@@ -46,7 +48,7 @@ func (th *MysqlTaskHandler) GetTask() (taskID uint, publicCode string, date stri
 		return 0, "", "", "", err
 	}
 	if len(tasks) == 0 {
-		return 0, "", "", "", errors.New("所有任务已完成，等待新任务，若长时间无新任务，程序将退出")
+		return 0, "", "", "", ErrTaskAllFinished
 	}
 
 	// 随机选择一个任务

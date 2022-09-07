@@ -18,7 +18,7 @@ var runCMD = &cobra.Command{
 
 func runCMDFunc(cmd *cobra.Command, args []string) {
 	s := spider.NewSpider(spider.NewMysqlTaskHandler(), minSleepTime, maxSleepTime)
-	logrus.Info("开启爬虫")
+	logrus.Info("爬虫已启动")
 	s.Run()
 
 }

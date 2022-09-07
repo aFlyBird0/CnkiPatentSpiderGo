@@ -2,6 +2,7 @@ package spider
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -45,9 +46,13 @@ func NewSpider(th TaskHandler, minSleepTime, maxSleepTime time.Duration) *Spider
 	}
 }
 
+// 目前的任务均已完成，等待新任务中
+var waitForTask bool
+
 func (s *Spider) Run() {
 	continuousErrCount := 0
 	for {
+		// 每次爬取前先睡眠一段时间
 		s.RandomSleep()
 
 		if continuousErrCount > 60 {
@@ -57,11 +62,23 @@ func (s *Spider) Run() {
 		// 从数据库中获取任务
 		taskID, publicCode, date, code, err := s.th.GetTask()
 		if err != nil {
+			// 如果没有任务，切换到低频模式
+			if errors.Is(err, ErrTaskAllFinished) {
+				waitForTask = true
+				continue
+			}
+			// 如果是数据库错误，记录错误，继续下一次循环
 			logrus.Error(err)
 			continuousErrCount++
 			continue
 		}
 		continuousErrCount = 0
+
+		// 取消低频模式
+		if waitForTask {
+			waitForTask = false
+			logrus.Info("检测到新任务，切换到快速爬取模式")
+		}
 
 		// 解析专利内容
 		patent, err := s.ParseContent(date, code, publicCode)
@@ -198,6 +215,11 @@ func (s *Spider) SaveHtml(body, date, code, publicCode string) {
 }
 
 func (s *Spider) RandomSleep() {
+	// 如果没有任务，等待 5 分钟，切换到低频模式
+	if waitForTask {
+		logrus.Info("没有任务，等待 5 分钟")
+		time.Sleep(time.Second * 5)
+	}
 	// 随机睡眠 minSleepTime ~ maxSleepTime
 	sleepTime := time.Duration(rand.Int63n(int64(s.maxSleepTime-s.minSleepTime))) + s.minSleepTime
 	time.Sleep(sleepTime)

@@ -5,13 +5,15 @@ import "gorm.io/gorm"
 type Patent struct {
 	gorm.Model
 
-	Title                string // 标题
-	Url                  string // 专利的url
-	NaviCode             string // 学科代码
-	Year                 string // 年份, 应该是公开日的年份，仅作爬虫分类用，不一定准确
-	ApplicationType      string // 专利类型
-	ApplicationDate      string // 申请日
-	PublicationNo        string `gorm:"index:idx_public_no,unique"` // 申请公布号/授权公布号
+	Title           string // 标题
+	Url             string // 专利的url
+	NaviCode        string // 学科代码
+	Year            string // 年份, 应该是公开日的年份，仅作爬虫分类用，不一定准确
+	ApplicationType string // 专利类型
+	ApplicationDate string // 申请日
+	//PublicationNo        string `gorm:"index:idx_public_no,unique"`       // 申请公布号/授权公布号
+	ApplyPublicationNo   string `gorm:"index:idx_apply_public_no,unique"` // 申请公布号
+	AuthPublicationNo    string `gorm:"index:idx_auth_public_no,unique"`  // 授权公布号
 	MultiPublicationNo   string // 多次公布
 	PublicationDate      string // 公开公告日
 	AuthPublicationDate  string //授权公告日
@@ -49,9 +51,9 @@ func (patent *Patent) FillRowFields(key, value string) {
 	case "申请（专利）号：":
 		patent.ApplicationNO = value
 	case "申请公布号：":
-		patent.PublicationNo = value
+		patent.ApplyPublicationNo = value
 	case "授权公布号：":
-		patent.PublicationNo = value
+		patent.AuthPublicationNo = value
 	case "公开公告日：":
 		patent.PublicationDate = value
 	case "授权公告日：":
@@ -81,7 +83,8 @@ func (patent *Patent) Validate() bool {
 	for _, field := range []string{
 		patent.ApplicationType,
 		patent.ApplicationDate,
-		patent.PublicationNo,
+		patent.ApplyPublicationNo,
+		patent.AuthPublicationNo,
 		patent.PublicationDate,
 		patent.AuthPublicationDate,
 		patent.Applicant,

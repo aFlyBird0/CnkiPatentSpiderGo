@@ -3,10 +3,11 @@ package db
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -22,8 +23,8 @@ var once sync.Once
 func GetDB() *gorm.DB {
 	once.Do(func() {
 		var err error
-		//db, err = gorm.Open(mysql.Open(strings.TrimSpace(dsn)), &gorm.Config{})
-		db, err = gorm.Open(sqlite.Open("patent_test.db"), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(strings.TrimSpace(dsn)), &gorm.Config{})
+		//db, err = gorm.Open(sqlite.Open("patent_test.db"), &gorm.Config{})	// sqlite3 for test
 		if err != nil {
 			logrus.Fatal(fmt.Errorf("数据库连接失败: %w", err))
 		}

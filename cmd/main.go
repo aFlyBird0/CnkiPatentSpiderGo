@@ -17,7 +17,7 @@ var (
 	rootCMD = &cobra.Command{
 		Use:        "spider",
 		Short:      `知网专利分布式爬虫`,
-		Long:       `知网专利分布式爬虫`,
+		Long:       `知网专利分布式爬虫，可在多台机器上同时运行，或同时在单台机器上运行多个进程，可随时停止`,
 		SuggestFor: []string{"run"},
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			initLog()
@@ -49,6 +49,10 @@ func initLog() {
 		logrus.Fatalf("创建日志目录失败: %v", err)
 	}
 
+	debugLogFile, err := os.OpenFile(spider.LogDebugFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		logrus.Fatalf("打开Debug日志文件失败: %v", err)
+	}
 	infoLogFile, err := os.OpenFile(spider.LogInfoFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		logrus.Fatalf("打开Info日志文件失败: %v", err)
@@ -58,15 +62,19 @@ func initLog() {
 		logrus.Fatalf("打开Error日志文件失败: %v", err)
 	}
 
-	// 同时输出 info 级别的日志到文件和控制台
+	// 合并 io 流，以将日志同时输出到文件和控制台
+	debugWriters := io.MultiWriter(os.Stdout, debugLogFile)
 	infoWriters := io.MultiWriter(os.Stdout, infoLogFile)
-	// 同时输出 error 级别的日志到文件和控制台
 	errorWriters := io.MultiWriter(os.Stdout, errorLogFile)
 
 	// 为不同级别设置不同的输出目标
 	lfHook := lfshook.NewHook(lfshook.WriterMap{
-		logrus.ErrorLevel: errorWriters,
+		logrus.DebugLevel: debugWriters,
 		logrus.InfoLevel:  infoWriters,
+		logrus.ErrorLevel: errorWriters,
+		logrus.WarnLevel:  infoWriters,
+		logrus.FatalLevel: errorWriters,
+		logrus.PanicLevel: errorWriters,
 	}, nil)
 	logrus.AddHook(lfHook)
 }

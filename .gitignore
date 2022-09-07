@@ -2,3 +2,4 @@
 db/dsn.txt
 data/
 *.db
+**/bin/
