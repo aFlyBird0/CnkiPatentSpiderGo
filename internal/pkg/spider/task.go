@@ -30,13 +30,10 @@ type Task struct {
 type MysqlTaskHandler struct {
 }
 
-func init() {
+func NewMysqlTaskHandler() TaskHandler {
 	if err := db.GetDB().AutoMigrate(&Task{}, &Patent{}); err != nil {
 		logrus.Fatal(err)
 	}
-}
-
-func NewMysqlTaskHandler() TaskHandler {
 	return &MysqlTaskHandler{}
 }
 

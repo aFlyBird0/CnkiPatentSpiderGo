@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"spider/db"
 	"spider/internal/pkg/spider"
 )
 
@@ -27,6 +28,7 @@ var (
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCMD.PersistentFlags().BoolVarP(&isDebug, "debug", "", false, "debug level log")
+	rootCMD.PersistentFlags().BoolVarP(&db.TestEnvEnabled, "test", "t", false, "开启测试环境")
 	rootCMD.AddCommand(runCMD)
 }
 

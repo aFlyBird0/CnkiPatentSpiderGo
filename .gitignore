@@ -1,5 +1,6 @@
 .idea/
 db/dsn.txt
+db/dsn_test.txt
 data/
 *.db
 **/bin/

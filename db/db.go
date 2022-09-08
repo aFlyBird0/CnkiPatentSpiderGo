@@ -18,13 +18,27 @@ var db *gorm.DB
 //go:embed dsn.txt
 var dsn string
 
+// 测试数据库连接
+//go:embed dsn_test.txt
+var dsnTest string
+
+// 测试环境开启
+var TestEnvEnabled bool
+
 var once sync.Once
 
 func GetDB() *gorm.DB {
 	once.Do(func() {
 		var err error
-		db, err = gorm.Open(mysql.Open(strings.TrimSpace(dsn)), &gorm.Config{})
-		//db, err = gorm.Open(sqlite.Open("patent_test.db"), &gorm.Config{})	// sqlite3 for test
+		// 根据命令行选择数据库环境
+		switch TestEnvEnabled {
+		case true:
+			logrus.Info("测试环境已开启")
+			db, err = gorm.Open(mysql.Open(strings.TrimSpace(dsnTest)), &gorm.Config{})
+			//db, err = gorm.Open(sqlite.Open("patent_test.db"), &gorm.Config{})	// sqlite3 for test
+		case false:
+			db, err = gorm.Open(mysql.Open(strings.TrimSpace(dsn)), &gorm.Config{})
+		}
 		if err != nil {
 			logrus.Fatal(fmt.Errorf("数据库连接失败: %w", err))
 		}
