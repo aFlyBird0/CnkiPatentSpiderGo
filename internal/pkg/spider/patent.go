@@ -48,7 +48,7 @@ func (patent *Patent) FillRowFields(key, value string) {
 		patent.ApplicantAddress = value
 	case "发明人：":
 		patent.Inventors = value
-	case "申请（专利）号：":
+	case "申请(专利)号：", "申请（专利）号：":
 		patent.ApplicationNO = value
 	case "申请公布号：":
 		patent.ApplyPublicationNo = value
