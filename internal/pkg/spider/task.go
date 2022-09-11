@@ -18,6 +18,8 @@ type TaskHandler interface {
 	SavePatent(taskID uint, patent *Patent) error
 }
 
+// Task 是任务库
+// 实际运行可能需要给 deleted_at 和 finish 加个联合索引
 type Task struct {
 	gorm.Model
 	PublicCode string `gorm:"index:idx_public_code,unique"` // 公开号

@@ -1,6 +1,10 @@
 package spider
 
-import "gorm.io/gorm"
+import (
+	"regexp"
+
+	"gorm.io/gorm"
+)
 
 type Patent struct {
 	gorm.Model
@@ -34,6 +38,8 @@ type Patent struct {
 
 // FillRowFields 填充专利的字段
 func (patent *Patent) FillRowFields(key, value string) {
+	// 去除 value 的所有空白符
+	value = removeSpace(value)
 	switch key {
 	case "专利类型：":
 		patent.ApplicationType = value
@@ -103,4 +109,9 @@ func (patent *Patent) Validate() bool {
 		}
 	}
 	return notEmptyCount >= 8
+}
+
+func removeSpace(str string) string {
+	reg := regexp.MustCompile(`\s+`)
+	return reg.ReplaceAllString(str, "")
 }
