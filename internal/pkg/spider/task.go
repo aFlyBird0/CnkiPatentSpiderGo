@@ -2,6 +2,7 @@ package spider
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/sirupsen/logrus"
@@ -13,7 +14,7 @@ import (
 
 const maxTaskBatch = 200 // 最大一次从数据库中查询的 task 数量
 
-var ErrTaskAllFinished = errors.New("所有任务已完成，等待新任务中，已切换到超低频爬取模式")
+var ErrTaskAllFinished = errors.New("所有任务已完成，等待新任务中")
 
 type TaskHandler interface {
 	RandomTask() (Task, error)
@@ -30,6 +31,11 @@ type Task struct {
 	Code       string // 学科代码
 	Finish     bool   `gorm:"default:0"` // 是否已经完成
 	CrawlCount int    `gorm:"default:0"` // 总计被爬取的次数
+}
+
+func (t Task) String() string {
+	return fmt.Sprintf("Task{ID: %d, 公开号: %s, 日期: %s, 学科分类号: %s, 是否完成: %t, 已爬取次数: %d}",
+		t.ID, t.PublicCode, t.Date, t.Code, t.Finish, t.CrawlCount)
 }
 
 type MysqlTaskHandler struct {
@@ -68,7 +74,6 @@ func (th *MysqlTaskHandler) RandomTask() (task Task, err error) {
 	if err := db.GetDB().Model(&Task{}).Where("id = ?", task.ID).Update("crawl_count", task.CrawlCount+1).Error; err != nil {
 		logrus.Errorf("更新被爬取次数失败: %v", err)
 	}
-	//fmt.Printf("task: %+v\n", task)
 	return task, nil
 }
 
@@ -89,6 +94,18 @@ func (th *MysqlTaskHandler) RandomBatchTasks(num int) ([]Task, error) {
 	for i := 0; i < num; i++ {
 		randIndex := rand.Int() % len(tasks)
 		tasksReturn = append(tasksReturn, tasks[randIndex])
+	}
+
+	tasksID := make([]uint, 0, len(tasksReturn))
+	for _, task := range tasksReturn {
+		tasksID = append(tasksID, task.ID)
+	}
+
+	// 批量更新被爬取次数
+	if err := db.GetDB().Model(&Task{}).Where("id in (?)", tasksID).
+		Update("crawl_count", gorm.Expr("crawl_count + ?", 1)).
+		Error; err != nil {
+		logrus.Errorf("更新被爬取次数失败: %v", err)
 	}
 
 	return tasksReturn, nil

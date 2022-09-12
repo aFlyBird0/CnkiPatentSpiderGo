@@ -38,8 +38,6 @@ type Patent struct {
 
 // FillRowFields 填充专利的字段
 func (patent *Patent) FillRowFields(key, value string) {
-	// 去除 value 的所有空白符
-	value = removeSpace(value)
 	switch key {
 	case "专利类型：":
 		patent.ApplicationType = value
@@ -79,6 +77,36 @@ func (patent *Patent) FillRowFields(key, value string) {
 	}
 }
 
+// RemoveAllBlank 去除专利所有空白字符
+func (patent *Patent) RemoveAllBlank() {
+	// 对每个字段都调用 removeAllBlank 函数
+	patent.Title = removeAllBlank(patent.Title)
+	patent.Url = removeAllBlank(patent.Url)
+	patent.NaviCode = removeAllBlank(patent.NaviCode)
+	patent.Year = removeAllBlank(patent.Year)
+	patent.ApplicationType = removeAllBlank(patent.ApplicationType)
+	patent.ApplicationDate = removeAllBlank(patent.ApplicationDate)
+	patent.PublicationNo = removeAllBlank(patent.PublicationNo)
+	patent.ApplyPublicationNo = removeAllBlank(patent.ApplyPublicationNo)
+	patent.AuthPublicationNo = removeAllBlank(patent.AuthPublicationNo)
+	patent.MultiPublicationNo = removeAllBlank(patent.MultiPublicationNo)
+	patent.PublicationDate = removeAllBlank(patent.PublicationDate)
+	patent.AuthPublicationDate = removeAllBlank(patent.AuthPublicationDate)
+	patent.Applicant = removeAllBlank(patent.Applicant)
+	patent.ApplicantAddress = removeAllBlank(patent.ApplicantAddress)
+	patent.Inventors = removeAllBlank(patent.Inventors)
+	patent.ApplicationNO = removeAllBlank(patent.ApplicationNO)
+	patent.AreaCode = removeAllBlank(patent.AreaCode)
+	patent.ClassificationNO = removeAllBlank(patent.ClassificationNO)
+	patent.MainClassificationNo = removeAllBlank(patent.MainClassificationNo)
+	patent.Agency = removeAllBlank(patent.Agency)
+	patent.Agent = removeAllBlank(patent.Agent)
+	patent.Page = removeAllBlank(patent.Page)
+	patent.Abstract = removeAllBlank(patent.Abstract)
+	patent.Sovereignty = removeAllBlank(patent.Sovereignty)
+	patent.LegalStatus = removeAllBlank(patent.LegalStatus)
+}
+
 // Validate 校验专利的字段，如果空值太多，则失败
 func (patent *Patent) Validate() bool {
 	if patent.Title == "" {
@@ -111,7 +139,7 @@ func (patent *Patent) Validate() bool {
 	return notEmptyCount >= 8
 }
 
-func removeSpace(str string) string {
+func removeAllBlank(str string) string {
 	reg := regexp.MustCompile(`\s+`)
 	return reg.ReplaceAllString(str, "")
 }

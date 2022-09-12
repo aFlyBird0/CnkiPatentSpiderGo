@@ -2,13 +2,11 @@ package spider
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/antchfx/htmlquery"
@@ -69,78 +67,34 @@ func NewSpider(th TaskHandler, concurrency int, minSleepTime, maxSleepTime, wait
 	}
 }
 
-// 目前的任务均已完成，等待新任务中
-var waitForTask bool
-
 func (s *Spider) GoRun() {
 	logrus.Infof("并发数为 %d", s.concurrency)
-	var wg sync.WaitGroup
-	for i := 0; i < s.concurrency; i++ {
-		wg.Add(1)
-		go func(i int) {
-			logrus.Infof("已启动第 %d 个爬虫", i+1)
-			s.Run()
-			wg.Done()
-		}(i)
-	}
-	wg.Wait()
+	wp := NewWorkerPool(s.th, s.concurrency, 10, s.Run, s.RandomSleep, s.WaitForTask)
+	wp.Run()
 }
 
-func (s *Spider) Run() {
-	continuousErrCount := 0
-	for {
-		// 每次爬取前先睡眠一段时间
-		s.RandomSleep()
-
-		if continuousErrCount > 60 {
-			logrus.Error("连续60次错误，退出")
-			break
-		}
-		// 从数据库中获取任务
-		task, err := s.th.RandomTask()
-		if err != nil {
-			// 如果没有任务，切换到低频模式
-			if errors.Is(err, ErrTaskAllFinished) {
-				waitForTask = true
-				continue
-			}
-			// 如果是数据库错误，记录错误，继续下一次循环
-			logrus.Error(err)
-			continuousErrCount++
-			continue
-		}
-		continuousErrCount = 0
-
-		// 取消低频模式
-		if waitForTask {
-			waitForTask = false
-			logrus.Info("检测到新任务，切换到快速爬取模式")
-		}
-
-		// 解析专利内容
-		patent, err := s.ParseContent(task.Date, task.Code, task.PublicCode)
-		if err != nil {
-			logrus.Error(err)
-			continuousErrCount++
-			continue
-		}
-		// 校验合法性
-		if !patent.Validate() {
-			logrus.Error("数据不合法")
-			logrus.Infof("patent: %+v\n", patent)
-			continuousErrCount++
-			continue
-		}
-		// 保存到数据库
-		save := func() {
-			logrus.Infof("保存专利到数据库中: %+v\n", patent)
-			if err := s.th.SavePatent(task.ID, patent); err != nil {
-				logrus.Error(err)
-				continuousErrCount++
-			}
-		}
-		go save()
+func (s *Spider) Run(task *Task) error {
+	// 解析专利内容
+	patent, err := s.ParseContent(task.Date, task.Code, task.PublicCode)
+	if err != nil {
+		return err
 	}
+	// 校验合法性
+	if !patent.Validate() {
+		logrus.Error("数据不合法")
+		logrus.Infof("patent: %+v\n", patent)
+		return err
+	}
+	// 保存到数据库
+	save := func() {
+		patent.RemoveAllBlank()
+		logrus.Infof("保存专利到数据库中: %+v", patent)
+		if err := s.th.SavePatent(task.ID, patent); err != nil {
+			logrus.Error(err)
+		}
+	}
+	go save()
+	return nil
 }
 
 func (s *Spider) ParseContent(date, code, publicCode string) (patent *Patent, err error) {
@@ -266,15 +220,14 @@ func (s *Spider) SaveHtml(body, date, code, publicCode string) {
 }
 
 func (s *Spider) RandomSleep() {
-	// 如果没有任务，等待一段时间，切换到低频模式
-	if waitForTask {
-		logrus.Info("没有任务，等待 " + s.waitForTaskSleepTime.String())
-		time.Sleep(s.waitForTaskSleepTime)
-	} else {
-		// 随机睡眠 minSleepTime ~ maxSleepTime
-		sleepTime := time.Duration(rand.Int63n(int64(s.maxSleepTime-s.minSleepTime))) + s.minSleepTime
-		time.Sleep(sleepTime)
-	}
+	// 随机睡眠 minSleepTime ~ maxSleepTime
+	sleepTime := time.Duration(rand.Int63n(int64(s.maxSleepTime-s.minSleepTime))) + s.minSleepTime
+	time.Sleep(sleepTime)
+}
+
+func (s *Spider) WaitForTask() {
+	logrus.Info("没有任务，等待 " + s.waitForTaskSleepTime.String())
+	time.Sleep(s.waitForTaskSleepTime)
 }
 
 func getPatentURL(publicCode string) string {
