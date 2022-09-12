@@ -97,7 +97,7 @@ func (s *Spider) Run() {
 			break
 		}
 		// 从数据库中获取任务
-		taskID, publicCode, date, code, err := s.th.GetTask()
+		task, err := s.th.RandomTask()
 		if err != nil {
 			// 如果没有任务，切换到低频模式
 			if errors.Is(err, ErrTaskAllFinished) {
@@ -118,7 +118,7 @@ func (s *Spider) Run() {
 		}
 
 		// 解析专利内容
-		patent, err := s.ParseContent(date, code, publicCode)
+		patent, err := s.ParseContent(task.Date, task.Code, task.PublicCode)
 		if err != nil {
 			logrus.Error(err)
 			continuousErrCount++
@@ -134,7 +134,7 @@ func (s *Spider) Run() {
 		// 保存到数据库
 		save := func() {
 			logrus.Infof("保存专利到数据库中: %+v\n", patent)
-			if err := s.th.SavePatent(taskID, patent); err != nil {
+			if err := s.th.SavePatent(task.ID, patent); err != nil {
 				logrus.Error(err)
 				continuousErrCount++
 			}
