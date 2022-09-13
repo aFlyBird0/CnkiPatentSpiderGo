@@ -104,7 +104,8 @@ func (wp *WorkerPool) Run() {
 
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
-	signal.Notify(sigs, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	// 这里不能加 syscall.SIGHUP，否则会导致终端连接断开后，程序退出（哪怕是后台运行）
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		sig := <-sigs
 		fmt.Println()

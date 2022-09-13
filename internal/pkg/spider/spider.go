@@ -234,7 +234,7 @@ func getPatentURL(publicCode string) string {
 	return fmt.Sprintf(patentPrefix, publicCode)
 }
 
-// 获取被 "," 分隔的发明人，返回前四个
+// 获取被 ";" 分隔的发明人，返回前四个
 func getFirstFourAuthor(inventors string) (first, second, third, fourth string) {
 	inventorsList := strings.Split(inventors, ";")
 	length := len(inventorsList)
