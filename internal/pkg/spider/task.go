@@ -12,7 +12,7 @@ import (
 	"spider/db"
 )
 
-const maxTaskBatch = 200 // 最大一次从数据库中查询的 task 数量
+const maxQueryTaskBatch = 200 // 最大一次从数据库中查询的 task 数量
 
 var ErrTaskAllFinished = errors.New("所有任务已完成，等待新任务中")
 
@@ -50,7 +50,7 @@ func NewMysqlTaskHandler() TaskHandler {
 
 func (th *MysqlTaskHandler) listTasks() (tasks []Task, err error) {
 	// 寻找未完成的任务
-	err = db.GetDB().Find(&tasks, "finish = ?", false).Limit(maxTaskBatch).Error
+	err = db.GetDB().Limit(maxQueryTaskBatch).Where("finish = ?", false).Find(&tasks).Error
 	if err != nil {
 		return nil, err
 	}
