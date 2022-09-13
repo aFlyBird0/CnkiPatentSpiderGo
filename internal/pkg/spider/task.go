@@ -115,7 +115,7 @@ func (th *MysqlTaskHandler) SavePatent(taskID uint, patent *Patent) error {
 	// 保存专利
 	err := db.GetDB().
 		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "apply_publication_no"}, {Name: "auth_publication_no"}},
+			Columns:   []clause.Column{{Name: "publication_no"}},
 			DoNothing: true,
 		}).
 		Create(patent).Error
