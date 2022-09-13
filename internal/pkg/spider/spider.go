@@ -23,13 +23,15 @@ type Spider struct {
 	maxSleepTime         time.Duration // 两次爬取之间的最大睡眠时间
 	waitForTaskSleepTime time.Duration // 等待任务时的睡眠时间
 	concurrency          int           // 并发数
+	taskBatch            int           // 每次获取任务的数量
+	taskPoolCap          int           // 任务池容量
 }
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func NewSpider(th TaskHandler, concurrency int, minSleepTime, maxSleepTime, waitForTaskSleepTime time.Duration) *Spider {
+func NewSpider(th TaskHandler, concurrency, taskBatch, taskPoolCap int, minSleepTime, maxSleepTime, waitForTaskSleepTime time.Duration) *Spider {
 	// 校验与修正参数
 	if concurrency < 1 {
 		logrus.Info("并发数不能小于 1，已自动设置为 1")
@@ -41,6 +43,22 @@ func NewSpider(th TaskHandler, concurrency int, minSleepTime, maxSleepTime, wait
 	}
 	if minSleepTime > maxSleepTime {
 		logrus.Fatal("最小睡眠时间不能大于最大睡眠时间")
+	}
+	if taskBatch < 1 {
+		logrus.Info("每次获取任务的数量不能小于 1，已自动设置为 1")
+		taskBatch = 1
+	}
+	if taskBatch > 100 {
+		logrus.Info("每次获取任务的数量不能大于 100，已自动设置为 100")
+		taskBatch = 100
+	}
+	if taskPoolCap < taskBatch {
+		logrus.Info("任务池容量不能小于每次获取任务的数量，已自动设置为每次获取任务的数量")
+		taskPoolCap = taskBatch
+	}
+	if taskPoolCap > 1000 {
+		logrus.Info("任务池容量不能大于 1000，已自动设置为 1000")
+		taskPoolCap = 1000
 	}
 	if minSleepTime < time.Millisecond*100 {
 		logrus.Info("最小睡眠时间不能小于 100 毫秒，已自动设置为 100 毫秒")
@@ -58,9 +76,13 @@ func NewSpider(th TaskHandler, concurrency int, minSleepTime, maxSleepTime, wait
 		logrus.Info("等待任务时的睡眠时间不能大于1小时，已自动设置为 1 小时")
 		waitForTaskSleepTime = time.Hour
 	}
+	logrus.Infof("所有参数如下：\n并发数：%d\n每次获取任务的数量：%d\n任务池容量：%d\n"+
+		"最小睡眠时间：%s\n最大睡眠时间：%s\n等待任务时的睡眠时间：%s",
+		concurrency, taskBatch, taskPoolCap, minSleepTime, maxSleepTime, waitForTaskSleepTime)
 	return &Spider{
 		th:                   th,
 		concurrency:          concurrency,
+		taskBatch:            taskBatch,
 		minSleepTime:         minSleepTime,
 		maxSleepTime:         maxSleepTime,
 		waitForTaskSleepTime: waitForTaskSleepTime,
@@ -69,7 +91,7 @@ func NewSpider(th TaskHandler, concurrency int, minSleepTime, maxSleepTime, wait
 
 func (s *Spider) GoRun() {
 	logrus.Infof("并发数为 %d", s.concurrency)
-	wp := NewWorkerPool(s.th, s.concurrency, 10, s.Run, s.RandomSleep, s.WaitForTask)
+	wp := NewWorkerPool(s.th, s.concurrency, s.taskBatch, s.taskPoolCap, s.Run, s.RandomSleep, s.WaitForTask)
 	wp.Run()
 }
 

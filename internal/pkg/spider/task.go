@@ -50,7 +50,7 @@ func NewMysqlTaskHandler() TaskHandler {
 
 func (th *MysqlTaskHandler) listTasks() (tasks []Task, err error) {
 	// 寻找未完成的任务
-	err = db.GetDB().Limit(maxQueryTaskBatch).Where("finish = ?", false).Find(&tasks).Error
+	err = db.GetDB().Debug().Limit(maxQueryTaskBatch).Where("finish = ?", false).Find(&tasks).Error
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,6 @@ func TestWorker(t *testing.T) {
 		logrus.Info("未检测到任务，睡眠 10 秒")
 		time.Sleep(time.Second * 10)
 	}
-	wp := NewWorkerPool(NewFakeTaskHandler(), 5, 10, workerFunc, workerSleepFunc, taskHandlerSleepFunc)
+	wp := NewWorkerPool(NewFakeTaskHandler(), 5, 10, 50, workerFunc, workerSleepFunc, taskHandlerSleepFunc)
 	wp.Run()
 }

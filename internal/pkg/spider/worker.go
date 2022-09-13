@@ -11,19 +11,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const tasksChanCap = 50 // task 队列容量
+const DefaultTasksChanCap = 50 // task 队列容量
 
 type WorkerPool struct {
-	th                   TaskHandler            // 获取与更新任务的 handler
-	workerNum            int                    // worker 数量
-	taskBatch            int                    // 每批次获取的任务数量
+	th          TaskHandler // 获取与更新任务的 handler
+	workerNum   int         // worker 数量
+	taskBatch   int         // 每批次获取的任务数量
+	taskChanCap int         // task 任务池容量
+
 	workerFunc           func(task *Task) error // worker 睡眠函数
 	workerSleepFunc      func()
 	taskHandlerSleepFunc func()
 	tasksChan            chan Task
 }
 
-func NewWorkerPool(th TaskHandler, workerNum int, taskBatch int, workerFunc func(task *Task) error,
+func NewWorkerPool(th TaskHandler, workerNum int, taskBatch, taskChanCap int, workerFunc func(task *Task) error,
 	workerSleepFunc func(), taskHandlerSleepFunc func()) *WorkerPool {
 	wp := &WorkerPool{
 		th:                   th,
@@ -33,7 +35,10 @@ func NewWorkerPool(th TaskHandler, workerNum int, taskBatch int, workerFunc func
 		workerSleepFunc:      workerSleepFunc,
 		taskHandlerSleepFunc: taskHandlerSleepFunc,
 	}
-	wp.tasksChan = make(chan Task, tasksChanCap)
+	if taskChanCap <= 0 {
+		taskChanCap = DefaultTasksChanCap
+	}
+	wp.tasksChan = make(chan Task, taskChanCap)
 
 	return wp
 }
