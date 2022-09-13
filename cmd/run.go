@@ -33,7 +33,7 @@ var (
 )
 
 func init() {
-	runCMD.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "爬虫并发数")
+	runCMD.Flags().IntVarP(&concurrency, "concurrency", "c", 3, "爬虫并发数")
 	runCMD.Flags().IntVarP(&taskBatch, "task-batch", "b", 10, "每批次获取任务的数量")
 	runCMD.Flags().IntVarP(&taskPoolCap, "task-pool-cap", "p", 50, "任务池容量")
 	runCMD.Flags().DurationVarP(&minSleepTime, "min", "m", time.Second, "两次请求最小间隔时间，下限0.5s")
