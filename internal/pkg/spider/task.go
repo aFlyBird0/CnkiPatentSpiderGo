@@ -12,7 +12,7 @@ import (
 	"spider/db"
 )
 
-const maxQueryTaskBatch = 500 // 最大一次从数据库中查询的 task 数量
+const maxQueryTaskBatch = 2000 // 最大一次从数据库中查询的 task 数量
 
 var ErrTaskAllFinished = errors.New("所有任务已完成，等待新任务中")
 

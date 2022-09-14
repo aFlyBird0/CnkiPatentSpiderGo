@@ -37,9 +37,9 @@ func NewSpider(th TaskHandler, concurrency, taskBatch, taskPoolCap int, minSleep
 		logrus.Info("并发数不能小于 1，已自动设置为 1")
 		concurrency = 1
 	}
-	if concurrency > 32 {
-		logrus.Info("并发数不能大于 32，已自动设置为 32")
-		concurrency = 32
+	if concurrency > 200 {
+		logrus.Info("并发数不能大于 200，已自动设置为 200")
+		concurrency = 200
 	}
 	if minSleepTime > maxSleepTime {
 		logrus.Fatal("最小睡眠时间不能大于最大睡眠时间")
@@ -110,7 +110,7 @@ func (s *Spider) Run(task *Task) error {
 	// 保存到数据库
 	save := func() {
 		patent.RemoveAllBlank()
-		logrus.Infof("保存专利到数据库中: %+v", patent)
+		//logrus.Infof("保存专利到数据库中: %+v", patent)
 		if err := s.th.SavePatent(task.ID, patent); err != nil {
 			logrus.Error(err)
 		}
@@ -220,7 +220,7 @@ func (s *Spider) ParseContent(date, code, publicCode string) (patent *Patent, er
 }
 
 func (s *Spider) GetHtml(url string) (string, error) {
-	res, body, errs := gorequest.New().Get(url).End()
+	res, body, errs := gorequest.New().Proxy(getProxyStr()).Get(url).End()
 	if len(errs) > 0 {
 		return "", multierr.Combine(errs...)
 	}

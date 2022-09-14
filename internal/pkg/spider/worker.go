@@ -54,7 +54,7 @@ func (wp *WorkerPool) AddTasks(th TaskHandler, num int) error {
 		return err
 	}
 	for _, task := range tasks {
-		logrus.Info("任务入队: ", task)
+		//logrus.Info("任务入队: ", task)
 		// 如果任务过多会自动阻塞
 		wp.tasksChan <- task
 	}
@@ -95,7 +95,7 @@ func (wp *WorkerPool) Run() {
 				task := wp.GetTask()
 				// 自动睡眠一段时间
 				wp.workerSleepFunc()
-				logrus.Infof("开始爬取，任务: %v", task)
+				//logrus.Infof("开始爬取，任务: %v", task)
 				// 执行爬虫任务
 				if err := wp.workerFunc(&task); err != nil {
 					logrus.Error("爬取任务失败: ", err)
