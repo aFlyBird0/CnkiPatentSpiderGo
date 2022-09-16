@@ -99,10 +99,8 @@ func (wp *WorkerPool) Run() {
 				// 执行爬虫任务
 				if err := wp.workerFunc(&task); err != nil {
 					logrus.Error("爬取任务失败: ", err)
-					continuousErrCount += 1
 					continue
 				}
-				continuousErrCount = 0
 			}
 		}()
 	}
