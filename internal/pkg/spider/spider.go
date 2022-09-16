@@ -48,17 +48,17 @@ func NewSpider(th TaskHandler, concurrency, taskBatch, taskPoolCap int, minSleep
 		logrus.Info("每次获取任务的数量不能小于 1，已自动设置为 1")
 		taskBatch = 1
 	}
-	if taskBatch > 100 {
-		logrus.Info("每次获取任务的数量不能大于 100，已自动设置为 100")
-		taskBatch = 100
+	if taskBatch > 1000 {
+		logrus.Info("每次获取任务的数量不能大于 1000，已自动设置为 1000")
+		taskBatch = 1000
 	}
 	if taskPoolCap < taskBatch {
 		logrus.Info("任务池容量不能小于每次获取任务的数量，已自动设置为每次获取任务的数量")
 		taskPoolCap = taskBatch
 	}
-	if taskPoolCap > 1000 {
-		logrus.Info("任务池容量不能大于 1000，已自动设置为 1000")
-		taskPoolCap = 1000
+	if taskPoolCap > 5000 {
+		logrus.Info("任务池容量不能大于 5000，已自动设置为 5000")
+		taskPoolCap = 5000
 	}
 	if minSleepTime < time.Millisecond*100 {
 		logrus.Info("最小睡眠时间不能小于 100 毫秒，已自动设置为 100 毫秒")
