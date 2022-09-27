@@ -110,7 +110,7 @@ func (s *Spider) Run(task *Task) error {
 	// 保存到数据库
 	save := func() {
 		patent.RemoveAllBlank()
-		//logrus.Infof("保存专利到数据库中: %+v", patent)
+		logrus.Infof("保存专利到数据库中: %s, %s", patent.PublicationNo, patent.Title)
 		if err := s.th.SavePatent(task.ID, patent); err != nil {
 			logrus.Error(err)
 		}

@@ -72,8 +72,8 @@ func (wp *WorkerPool) Run() {
 	// 1. 不断往队列中塞任务
 	go func() {
 		for {
-			if continuousErrCount > 60 {
-				logrus.Error("连续60次错误，退出")
+			if continuousErrCount > 600 {
+				logrus.Error("连续600次错误，退出")
 				os.Exit(1)
 			}
 			logrus.Info("获取下一批次任务")
@@ -95,7 +95,7 @@ func (wp *WorkerPool) Run() {
 				task := wp.GetTask()
 				// 自动睡眠一段时间
 				wp.workerSleepFunc()
-				//logrus.Infof("开始爬取，任务: %v", task)
+				logrus.Infof("开始爬取，任务: %v", task)
 				// 执行爬虫任务
 				if err := wp.workerFunc(&task); err != nil {
 					logrus.Error("爬取任务失败: ", err)

@@ -6,6 +6,7 @@ import (
 
 func getProxyStr() string {
 	// 用户名密码, 若已添加白名单则不需要添加
+	// 订单已过期，账号密码可放心暴露
 	username := "t16329334483765"
 	password := "dm9tzng9"
 
