@@ -25,13 +25,15 @@ type Spider struct {
 	concurrency          int           // 并发数
 	taskBatch            int           // 每次获取任务的数量
 	taskPoolCap          int           // 任务池容量
+	proxy                string        // 代理
 }
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func NewSpider(th TaskHandler, concurrency, taskBatch, taskPoolCap int, minSleepTime, maxSleepTime, waitForTaskSleepTime time.Duration) *Spider {
+func NewSpider(th TaskHandler, concurrency, taskBatch, taskPoolCap int,
+	minSleepTime, maxSleepTime, waitForTaskSleepTime time.Duration, proxy string) *Spider {
 	// 校验与修正参数
 	if concurrency < 1 {
 		logrus.Info("并发数不能小于 1，已自动设置为 1")
@@ -83,9 +85,11 @@ func NewSpider(th TaskHandler, concurrency, taskBatch, taskPoolCap int, minSleep
 		th:                   th,
 		concurrency:          concurrency,
 		taskBatch:            taskBatch,
+		taskPoolCap:          taskPoolCap,
 		minSleepTime:         minSleepTime,
 		maxSleepTime:         maxSleepTime,
 		waitForTaskSleepTime: waitForTaskSleepTime,
+		proxy:                proxy,
 	}
 }
 
@@ -220,7 +224,7 @@ func (s *Spider) ParseContent(date, code, publicCode string) (patent *Patent, er
 }
 
 func (s *Spider) GetHtml(url string) (string, error) {
-	res, body, errs := gorequest.New().Proxy(getProxyStr()).Get(url).End()
+	res, body, errs := gorequest.New().Proxy(s.proxy).Get(url).End()
 	if len(errs) > 0 {
 		return "", multierr.Combine(errs...)
 	}
